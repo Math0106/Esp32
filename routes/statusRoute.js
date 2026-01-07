@@ -1,39 +1,26 @@
-// // Arquivo: routes/statusRoute.js
-// const express = require('express');
-// const router = express.Router();
-// const path = require('path'); 
-
-// router.get('/', (req, res) => {
-//     // __dirname aqui é a pasta 'routes'. Voltamos um (..) para a raiz e entramos em 'view'
-//     res.sendFile(path.join(__dirname, '../view/index.html'));
-// });
-
-// module.exports = router;
-
 const express = require('express');
 const router = express.Router();
 const path = require('path');
 
-// 1. Importar o Modelo que criamos no passo 1
+// 1. Importar o Modelo
 const LedLog = require('../models/LedLog');
 
 router.use(express.json());
 
+// Rota para mostrar o site
 router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../view/index.html'));
 });
 
-// IMPORTANTE: Adicione 'async' aqui para poder esperar o banco salvar
+// Rota POST: Site manda salvar 'ligar' ou 'desligar'
 router.post('/mudar-led', async (req, res) => {
     try {
         const acaoRecebida = req.body.acao;
         
-        // 2. Criar o registro para salvar
         const novoLog = new LedLog({
             acao: acaoRecebida
         });
 
-        // 3. Salvar no banco de dados (o await espera salvar antes de continuar)
         await novoLog.save();
 
         console.log(`💾 Salvo no banco: LED ${acaoRecebida}`);
@@ -49,28 +36,27 @@ router.post('/mudar-led', async (req, res) => {
     }
 });
 
+// Rota GET: O ESP32 acessa aqui para saber o último status
 router.get('/esp32/status', async (req, res) => {
     try {
-        // Pega o último registro (ordenado pelo ID, que contém a data)
-        const ultimoRegistro = await LedModel.findOne().sort({ _id: -1 });
+        // CORREÇÃO: Usando 'LedLog' em vez de 'LedModel'
+        const ultimoRegistro = await LedLog.findOne().sort({ _id: -1 });
 
         if (ultimoRegistro) {
             console.log("🔍 DADOS ENCONTRADOS:", ultimoRegistro);
 
-            // Tenta pegar o valor seja ele 'status', 'acao' ou 'command'
-            // O '_doc' é usado as vezes quando o mongoose traz metadados juntos
-            const dados = ultimoRegistro._doc || ultimoRegistro;
-            
-            const valorReal = dados.status || dados.acao || dados.comando || "campo_desconhecido";
+            // Como você salvou como 'acao' no POST, pegamos 'acao' aqui
+            // E enviamos como 'status' para o ESP32 entender
+            const valorReal = ultimoRegistro.acao || "desligar";
 
             res.json({ status: valorReal });
         } else {
-            console.log("📭 A coleção 'ledlogs' está vazia.");
+            console.log("📭 Banco vazio.");
             res.json({ status: "desligado" });
         }
 
     } catch (error) {
-        console.error("Erro:", error);
+        console.error("Erro no GET:", error);
         res.status(500).send("Erro interno");
     }
 });
