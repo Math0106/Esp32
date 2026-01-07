@@ -36,6 +36,7 @@ router.post('/mudar-led', async (req, res) => {
     }
 });
 
+
 // Rota GET: O ESP32 acessa aqui para saber o último status
 router.get('/esp32/status', async (req, res) => {
     try {
