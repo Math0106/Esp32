@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Projeto Profissional</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+
+<body>
+    <div class="card-controle">
+        <h2>Controle do Dispositivo</h2>
+        <button id="btnLed" class="botao off" onclick="alternarLed()">
+            LIGAR
+        </button>
+        <p>Status: <span id="statusTexto">Desligado</span></p>
+    </div>
+
+    <script>
+        let estadoLed = false;
+
+        async function alternarLed() {
+            const btn = document.getElementById('btnLed');
+            const texto = document.getElementById('statusTexto');
+
+            // Inverte o estado atual
+            estadoLed = !estadoLed;
+
+            // Atualiza o Visual (Front-end)
+            if (estadoLed) {
+                // Se ligou
+                btn.textContent = "DESLIGAR";
+                btn.classList.remove('off');
+                btn.classList.add('on');
+                texto.textContent = "Ligado";
+                texto.style.color = "green";
+            } else {
+                // Se desligou
+                btn.textContent = "LIGAR";
+                btn.classList.remove('on');
+                btn.classList.add('off');
+                texto.textContent = "Desligado";
+                texto.style.color = "red";
+            }
+
+            // Envia o comando para o Servidor (Back-end)
+            try {
+                // Envia um POST para a rota que vamos criar depois
+                const resposta = await fetch('/api/mudar-led', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ acao: estadoLed ? 'ligar' : 'desligar' })
+                });
+
+                console.log("Comando enviado para o servidor!");
+
+            } catch (erro) {
+                console.error("Erro ao tentar conectar com o servidor:", erro);
+                alert("Erro de conexão com o servidor!");
+            }
+        }</script>
+    <style>
+        /* Estilo base do botão */
+        .botao {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 200px;
+        }
+
+        /* Estado Desligado (Vermelho) */
+        .botao.off {
+            background-color: #e74c3c;
+            /* Vermelho suave */
+            box-shadow: 0 4px 0 #c0392b;
+        }
+
+        /* Estado Ligado (Verde) */
+        .botao.on {
+            background-color: #2ecc71;
+            /* Verde suave */
+            box-shadow: 0 4px 0 #27ae60;
+        }
+
+        /* Efeito de clique */
+        .botao:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+    </style>
+</body>
+
+</html>

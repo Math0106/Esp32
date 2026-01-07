@@ -1,0 +1,12 @@
+# Dependências 
+node_modules/
+venv/
+__pycache__/
+
+# Arquivos de Sistema
+.DS_Store
+Thumbs.db
+
+# Segurança 
+.env
+.env.local
